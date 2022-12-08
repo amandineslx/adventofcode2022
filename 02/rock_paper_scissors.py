@@ -1,8 +1,22 @@
 INPUT_FILE = "rock_paper_scissors-input.txt"
 MOVES = {"A": "ROCK", "B": "PAPER", "C": "SCISSORS", "X": "ROCK", "Y": "PAPER", "Z": "SCISSORS"}
-MOVE_SCORES = {"ROCK": 1, "PAPER": 2, "SCISSORS": 3}
-WINNING_MOVE = {"ROCK": "PAPER", "PAPER": "SCISSORS", "SCISSORS": "ROCK"}
-LOSING_MOVE = {"ROCK": "SCISSORS", "PAPER": "ROCK", "SCISSORS": "PAPER"}
+MOVE_PROPERTIES = {
+    "ROCK": {
+        "score": 1,
+        "winning_move": "PAPER",
+        "losing_move": "SCISSORS"
+    },
+    "PAPER": {
+        "score": 2,
+        "winning_move": "SCISSORS",
+        "losing_move": "ROCK"
+    },
+    "SCISSORS": {
+        "score": 3,
+        "winning_move": "ROCK",
+        "losing_move": "PAPER"
+    }
+}
 
 class Round:
     def __init__(self, opponent_move, my_move):
@@ -14,11 +28,11 @@ def get_move_name(letter):
 
 def choose_move(opponent_move, round_outcome):
     if round_outcome == 'X':
-        return LOSING_MOVE[opponent_move]
+        return MOVE_PROPERTIES[opponent_move]['losing_move']
     elif round_outcome == 'Y':
         return opponent_move
     else:
-        return WINNING_MOVE[opponent_move]
+        return MOVE_PROPERTIES[opponent_move]['winning_move']
 
 def get_round_moves(round_line):
     move_letters = round_line.split()
@@ -35,7 +49,7 @@ def get_round_moves_from_outcome(round_line):
     return round
 
 def get_my_round_score(round):
-    score = MOVE_SCORES[round.my_move]
+    score = MOVE_PROPERTIES[round.my_move]['score']
     winner = get_winner(round.opponent_move, round.my_move)
     if winner == 0:
         score = score + 3
@@ -46,7 +60,7 @@ def get_my_round_score(round):
 def get_winner(opponent_move, my_move):
     if opponent_move == my_move:
         return 0
-    elif opponent_move == WINNING_MOVE[my_move]:
+    elif opponent_move == MOVE_PROPERTIES[my_move]['winning_move']:
         return -1
     else:
         return 1
