@@ -1,4 +1,5 @@
 INPUT_FILE = '07-input.txt'
+MAX_SIZE = 100000
 
 class Folder:
     def __init__(self, parent, name):
@@ -30,19 +31,34 @@ class Folder:
     def get_file(self, file_name):
         return self.files[file_name]
 
+    def get_size(self):
+        size = 0
+        for file in self.files.keys():
+            size += self.get_file(file).size
+        for folder in self.folders.keys():
+            size += self.get_folder(folder).get_size()
+        return size
+
+    def get_small_subfolder_sizes(self, small_folder_sizes):
+        current_folder_size = self.get_size()
+        if current_folder_size < MAX_SIZE:
+            small_folder_sizes.append(self.get_size())
+        for folder in self.folders.keys():
+            self.get_folder(folder).get_small_subfolder_sizes(small_folder_sizes)
+
     def to_string(self, indentation=0):
         result = ''
         if len(self.files.keys()) > 0:
             result += '\n' + get_indentation(indentation) + 'files: ' + ', '.join(self.files.keys())
         for folder_name in self.folders.keys():
             result += '\n' + get_indentation(indentation) + folder_name
-            result += self.folders[folder_name].to_string(indentation+1)
+            result += self.get_folder(folder_name).to_string(indentation+1)
         return result
 
 class File:
     def __init__(self, name, size):
         self.name = name
-        self.size = size
+        self.size = int(size)
 
 def get_indentation(indentation=0):
     if indentation == 0:
@@ -86,4 +102,11 @@ def create_arborescence():
                 files.append(File(line_parts[1], line_parts[0]))
     return arborescence
 
-print(create_arborescence().to_string())
+def compute_small_folder_sizes(arborescence):
+    small_folder_sizes = []
+    arborescence.get_small_subfolder_sizes(small_folder_sizes)
+    return sum(small_folder_sizes)
+
+arborescence = create_arborescence()
+print(arborescence.to_string())
+print(compute_small_folder_sizes(arborescence))
