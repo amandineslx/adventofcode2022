@@ -1,5 +1,7 @@
 INPUT_FILE = '07-input.txt'
 MAX_SIZE = 100000
+FILE_SYSTEM_SIZE = 70000000
+FREE_SPACE_NEEDED = 30000000
 
 class Folder:
     def __init__(self, parent, name):
@@ -39,12 +41,11 @@ class Folder:
             size += self.get_folder(folder).get_size()
         return size
 
-    def get_small_subfolder_sizes(self, small_folder_sizes):
+    def get_subfolder_sizes(self, subfolder_sizes):
         current_folder_size = self.get_size()
-        if current_folder_size < MAX_SIZE:
-            small_folder_sizes.append(self.get_size())
+        subfolder_sizes.append(current_folder_size)
         for folder in self.folders.keys():
-            self.get_folder(folder).get_small_subfolder_sizes(small_folder_sizes)
+            self.get_folder(folder).get_subfolder_sizes(subfolder_sizes)
 
     def to_string(self, indentation=0):
         result = ''
@@ -73,14 +74,14 @@ def create_arborescence():
         files = []
         folder_names = []
         for line in f.readlines():
-            print(f'{current.name} > {line}')
+            #print(f'{current.name} > {line}')
             if line.startswith('$'):
                 if files:
-                    print('Add files')
+                    #print('Add files')
                     current.add_files(files)
                     files = []
                 if folder_names:
-                    print(f'Add folders to {current.name}')
+                    #print(f'Add folders to {current.name}')
                     current.add_folders(folder_names)
                     folder_names = []
             if line.startswith('$ cd /'):
@@ -88,10 +89,10 @@ def create_arborescence():
             elif line.startswith('$ ls'):
                 continue
             elif line.startswith('$ cd ..'):
-                print('back to parent')
+                #print('back to parent')
                 current = current.parent
             elif line.startswith('$ cd'):
-                print('going to folder')
+                #print('going to folder')
                 line_parts = line.split()
                 current = current.get_folder(line_parts[2])
             elif line.startswith('dir '):
@@ -100,13 +101,31 @@ def create_arborescence():
             else:
                 line_parts = line.split()
                 files.append(File(line_parts[1], line_parts[0]))
+        # take into account the last file and folders even if there is no command starting with $ after
+        if files:
+            current.add_files(files)
+        if folder_names:
+            current.add_folders(folder_names)
     return arborescence
 
 def compute_small_folder_sizes(arborescence):
-    small_folder_sizes = []
-    arborescence.get_small_subfolder_sizes(small_folder_sizes)
+    subfolder_sizes = []
+    arborescence.get_subfolder_sizes(subfolder_sizes)
+    small_folder_sizes = [folder for folder in subfolder_sizes if folder < MAX_SIZE]
     return sum(small_folder_sizes)
+
+def find_folder_to_free_space(arborescence):
+    missing_free_space = FREE_SPACE_NEEDED - FILE_SYSTEM_SIZE + arborescence.get_size()
+    print(missing_free_space)
+    subfolder_sizes = []
+    arborescence.get_subfolder_sizes(subfolder_sizes)
+    print(subfolder_sizes)
+    print(len(subfolder_sizes))
+    small_folder_sizes = [folder for folder in subfolder_sizes if folder >= missing_free_space]
+    print(small_folder_sizes)
+    return min(small_folder_sizes)
 
 arborescence = create_arborescence()
 print(arborescence.to_string())
-print(compute_small_folder_sizes(arborescence))
+#print(compute_small_folder_sizes(arborescence))
+print(find_folder_to_free_space(arborescence))
