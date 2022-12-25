@@ -1,25 +1,23 @@
 INPUT_FILE = '09-input.txt'
 DIRECTIONS = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
 
-class State:
+class Knot:
     def __init__(self):
-        self.head_x = 0
-        self.head_y = 0
-        self.tail_x = 0
-        self.tail_y = 0
-        self.positions = set()
+        self.x = 0
+        self.y = 0
+        self.is_final_knot = False
 
-    def move_head(self, direction_char):
+    def move_as_head(self, direction_char):
         direction = DIRECTIONS[direction_char]
-        self.head_x += direction[0]
-        self.head_y += direction[1]
+        self.x += direction[0]
+        self.y += direction[1]
 
-    def move_tail(self):
+    def move_as_tail(self, head, positions):
         move = [0, 0]
-        move_left = self.should_move_left()
-        move_right = self.should_move_right()
-        move_up = self.should_move_up()
-        move_down = self.should_move_down()
+        move_left = self.should_move_left(head)
+        move_right = self.should_move_right(head)
+        move_up = self.should_move_up(head)
+        move_down = self.should_move_down(head)
 
         if move_left:
             move[0] = -1
@@ -30,44 +28,55 @@ class State:
         elif move_down:
             move[1] = -1
 
-        print(f"Turn: head({self.head_x}, {self.head_y}), tail({self.tail_x}, {self.tail_y}), move({move[0]}, {move[1]})")
-        self.tail_x += move[0]
-        self.tail_y += move[1]
-        self.positions.add((self.tail_x, self.tail_y))
+        print(f"Turn: head({head.x}, {head.y}), tail({self.x}, {self.y}), move({move[0]}, {move[1]})")
+        self.x += move[0]
+        self.y += move[1]
+        if self.is_final_knot:
+            positions.add((self.x, self.y))
 
-    def should_move_up(self):
-        condition = self.head_y == self.tail_y + 2
-        condition |= (self.head_x in [self.tail_x - 2, self.tail_x + 2] and self.head_y == self.tail_y + 1)
+    def should_move_up(self, head):
+        condition = head.y == self.y + 2
+        condition |= (head.x in [self.x - 2, self.x + 2] and head.y == self.y + 1)
         return condition
 
-    def should_move_down(self):
-        condition = self.head_y == self.tail_y - 2
-        condition |= (self.head_x in [self.tail_x - 2, self.tail_x + 2] and self.head_y == self.tail_y - 1)
+    def should_move_down(self, head):
+        condition = head.y == self.y - 2
+        condition |= (head.x in [self.x - 2, self.x + 2] and head.y == self.y - 1)
         return condition
 
-    def should_move_left(self):
-        condition = self.head_x == self.tail_x - 2
-        condition |= (self.head_y in [self.tail_y - 2, self.tail_y + 2] and self.head_x == self.tail_x - 1)
+    def should_move_left(self, head):
+        condition = head.x == self.x - 2
+        condition |= (head.y in [self.y - 2, self.y + 2] and head.x == self.x - 1)
         return condition
 
-    def should_move_right(self):
-        condition = self.head_x == self.tail_x + 2
-        condition |= (self.head_y in [self.tail_y - 2, self.tail_y + 2] and self.head_x == self.tail_x + 1)
+    def should_move_right(self, head):
+        condition = head.x == self.x + 2
+        condition |= (head.y in [self.y - 2, self.y + 2] and head.x == self.x + 1)
         return condition
+
+class State:
+    def __init__(self, number_of_knots):
+        self.knots = []
+        for _ in range(number_of_knots):
+            self.knots.append(Knot())
+        self.knots[-1].is_final_knot = True
+        self.positions = set()
 
     def perform_instruction(self, line):
         line_parts = line.split()
         for _ in range(int(line_parts[1])):
-            self.move_head(line_parts[0])
-            self.move_tail()
+            for i in range(len(self.knots) - 1):
+                head_knot = self.knots[i]
+                tail_knot = self.knots[i+1]
+                head_knot.move_as_head(line_parts[0])
+                tail_knot.move_as_tail(head_knot, self.positions)
 
     def perform_movements(self):
-        current_state = State()
         with open(INPUT_FILE) as f:
             for line in f.readlines():
                 self.perform_instruction(line[:len(line) - 1])
         return len(self.positions)
 
-current_state = State()
+current_state = State(2)
 
 print(current_state.perform_movements())
