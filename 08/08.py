@@ -1,4 +1,4 @@
-INPUT_FILE = '08-input.txt'
+INPUT_FILE = '08-input-test.txt'
 
 def get_input():
     input = []
@@ -10,56 +10,65 @@ def get_input():
 def get_tree_value(input, x, y):
     return int(input[y][x])
 
-def is_tree_visible_left(input, x, y):
+def get_tree_visibility_left(input, x, y):
     tree_value = get_tree_value(input, x, y)
     if x == 0:
-        return True
-    for i in range(x):
+        return True, 0
+    for i in range(x - 1, -1, -1):
         if get_tree_value(input, i, y) >= tree_value:
-            return False
-    return True
+            return False, i + 1
+    return True, x
 
-def is_tree_visible_right(input, x, y):
+def get_tree_visibility_right(input, x, y):
     tree_value = get_tree_value(input, x, y)
     if x == len(input[0]) - 1:
-        return True
-    for i in range(len(input[0]) - x - 1):
-        if get_tree_value(input, len(input[0]) - 1 - i, y) >= tree_value:
-            return False
-    return True
+        return True, 0
+    for i in range(x + 1, len(input[0])):
+        if get_tree_value(input, i, y) >= tree_value:
+            return False, i + 1
+    return True, len(input[0]) - x - 1
 
-def is_tree_visible_up(input, x, y):
+def get_tree_visibility_up(input, x, y):
     tree_value = get_tree_value(input, x, y)
     if y == 0:
-        return True
-    for i in range(y):
+        return True, 0
+    for i in range(y - 1, -1, -1):
         if get_tree_value(input, x, i) >= tree_value:
-            return False
-    return True
+            return False, i + 1
+    return True, y
 
-def is_tree_visible_down(input, x, y):
+def get_tree_visibility_down(input, x, y):
     tree_value = get_tree_value(input, x, y)
     if y == len(input) - 1:
-        return True
-    for i in range(len(input) - y - 1):
-        if get_tree_value(input, x, len(input) - 1 - i) >= tree_value:
-            return False
-    return True
+        return True, 0
+    for i in range(y + 1, len(input)):
+        if get_tree_value(input, x, i) >= tree_value:
+            return False, i + 1
+    return True, len(input) - y - 1
 
-def is_tree_visible(input, x, y):
-    is_tree_visible = is_tree_visible_left(input, x, y)
-    is_tree_visible |= is_tree_visible_right(input, x, y)
-    is_tree_visible |= is_tree_visible_up(input, x, y)
-    is_tree_visible |= is_tree_visible_down(input, x, y)
-    return is_tree_visible
+def get_tree_visibility(input, x, y):
+    left = get_tree_visibility_left(input, x, y)
+    right = get_tree_visibility_right(input, x, y)
+    up = get_tree_visibility_up(input, x, y)
+    down = get_tree_visibility_down(input, x, y)
+
+    is_tree_visible = left[0] or right[0] or up[0] or down[0]
+    cynematic_score = left[1] * right[1] * up[1] * down[1]
+
+    return is_tree_visible, cynematic_score
 
 def get_visible_trees():
     input = get_input()
     visible_trees = 0
+    max_cynematic_score = 0
     for i in range(len(input[0])):
         for j in range(len(input)):
-            if is_tree_visible(input, i, j):
+            tree_visibility = get_tree_visibility(input, i, j)
+            print(tree_visibility[1])
+            if tree_visibility[0]:
                 visible_trees += 1
-    return visible_trees
+            if tree_visibility[1] > max_cynematic_score:
+                max_cynematic_score = tree_visibility[1]
+    return visible_trees, max_cynematic_score
 
 print(get_visible_trees())
