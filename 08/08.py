@@ -1,4 +1,4 @@
-INPUT_FILE = '08-input-test.txt'
+INPUT_FILE = '08-input.txt'
 
 def get_input():
     input = []
@@ -16,7 +16,7 @@ def get_tree_visibility_left(input, x, y):
         return True, 0
     for i in range(x - 1, -1, -1):
         if get_tree_value(input, i, y) >= tree_value:
-            return False, i + 1
+            return False, x - i
     return True, x
 
 def get_tree_visibility_right(input, x, y):
@@ -25,7 +25,7 @@ def get_tree_visibility_right(input, x, y):
         return True, 0
     for i in range(x + 1, len(input[0])):
         if get_tree_value(input, i, y) >= tree_value:
-            return False, i + 1
+            return False, i - x
     return True, len(input[0]) - x - 1
 
 def get_tree_visibility_up(input, x, y):
@@ -34,7 +34,7 @@ def get_tree_visibility_up(input, x, y):
         return True, 0
     for i in range(y - 1, -1, -1):
         if get_tree_value(input, x, i) >= tree_value:
-            return False, i + 1
+            return False, y - i
     return True, y
 
 def get_tree_visibility_down(input, x, y):
@@ -43,7 +43,7 @@ def get_tree_visibility_down(input, x, y):
         return True, 0
     for i in range(y + 1, len(input)):
         if get_tree_value(input, x, i) >= tree_value:
-            return False, i + 1
+            return False, i - y
     return True, len(input) - y - 1
 
 def get_tree_visibility(input, x, y):
