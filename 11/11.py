@@ -1,4 +1,4 @@
-INPUT_FILE = '11-input-test.txt'
+INPUT_FILE = '11-input.txt'
 MAX_NUMBER_OF_ROUNDS = 20
 
 class Monkey:
@@ -10,31 +10,27 @@ class Monkey:
         self.divisibility_test = -1
         self.monkey_number_if_true = -1
         self.monkey_number_if_false = -1
-        self.items_to_remove = []
 
     def to_string(self):
         return f'Monkey {self.number}: activity={self.activity}, items=({self.items}), operation={self.operation}, divisibility_test={self.divisibility_test}, monkey_if_true={self.monkey_number_if_true}, monkey_if_false={self.monkey_number_if_false}'
 
-    def inspect_item(self, item, operation):
+    def inspect_item(self, item):
         self.activity += 1
-        new_item_value = worry_about_item(item, operation)
+        new_item_value = worry_about_item(item, self.operation)
         new_item_value = feel_relief(new_item_value)
-        return item, new_item_value, self.get_monkey_target(new_item_value)
+        return new_item_value, self.get_monkey_target_number(new_item_value)
 
-    def get_monkey_target(self, item):
+    def get_monkey_target_number(self, item):
         if item % self.divisibility_test == 0:
             return self.monkey_number_if_true
         else:
             return self.monkey_number_if_false
 
-    def throw_item(self, old_item_value, new_item_value, monkey_target):
+    def throw_item(self, new_item_value, monkey_target):
         monkey_target.items.append(new_item_value)
-        self.items_to_remove.append(old_item_value)
 
     def finish_round(self):
-        for item in self.items_to_remove:
-            self.items.remove(item)
-        self.items_to_remove = []
+        self.items = []
 
 def worry_about_item(item, operation):
     old = item
@@ -74,15 +70,21 @@ def print_monkeys(monkeys):
         print(monkey.to_string())
 
 def take_rounds(monkeys):
-    for _ in range(MAX_NUMBER_OF_ROUNDS):
+    for i in range(MAX_NUMBER_OF_ROUNDS):
+        print(f"ROUND {i}")
         for monkey in monkeys:
             for item in monkey.items:
-                print(f"Monkey={monkey.number}, item={item}")
-                throw = monkey.inspect_item(item, monkey.operation)
-                monkey.throw_item(throw[0], throw[1], monkeys[throw[2]])
+                #print(f"Monkey={monkey.number}, item={item}")
+                throw = monkey.inspect_item(item)
+                monkey.throw_item(throw[0], monkeys[throw[1]])
             monkey.finish_round()
         print_monkeys(monkeys)
 
+def get_most_actives_monkeys_cumulated(monkeys):
+    monkey_activities = [monkey.activity for monkey in monkeys]
+    monkey_activities.sort(reverse=True)
+    return monkey_activities[0] * monkey_activities[1]
 
 monkeys = initialize_monkeys()
 take_rounds(monkeys)
+print(get_most_actives_monkeys_cumulated(monkeys))
