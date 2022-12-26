@@ -1,4 +1,4 @@
-INPUT_FILE = '09-input.txt'
+INPUT_FILE = '09-input-test.txt'
 DIRECTIONS = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
 
 class Knot:
@@ -6,6 +6,9 @@ class Knot:
         self.x = 0
         self.y = 0
         self.is_final_knot = False
+
+    def to_string(self, knot_number):
+        return f"Knot {knot_number}: ({self.x}, {self.y})"
 
     def move_as_head(self, direction_char):
         direction = DIRECTIONS[direction_char]
@@ -28,7 +31,7 @@ class Knot:
         elif move_down:
             move[1] = -1
 
-        print(f"Turn: head({head.x}, {head.y}), tail({self.x}, {self.y}), move({move[0]}, {move[1]})")
+        #print(f"Turn: head({head.x}, {head.y}), tail({self.x}, {self.y}), move({move[0]}, {move[1]})")
         self.x += move[0]
         self.y += move[1]
         if self.is_final_knot:
@@ -65,11 +68,12 @@ class State:
     def perform_instruction(self, line):
         line_parts = line.split()
         for _ in range(int(line_parts[1])):
+            self.knots[0].move_as_head(line_parts[0])
             for i in range(len(self.knots) - 1):
                 head_knot = self.knots[i]
                 tail_knot = self.knots[i+1]
-                head_knot.move_as_head(line_parts[0])
                 tail_knot.move_as_tail(head_knot, self.positions)
+                print(tail_knot.to_string(i+1))
 
     def perform_movements(self):
         with open(INPUT_FILE) as f:
@@ -77,6 +81,6 @@ class State:
                 self.perform_instruction(line[:len(line) - 1])
         return len(self.positions)
 
-current_state = State(2)
+current_state = State(10)
 
 print(current_state.perform_movements())
