@@ -1,4 +1,4 @@
-INPUT_FILE = '09-input-test.txt'
+INPUT_FILE = '09-input.txt'
 DIRECTIONS = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
 
 class Knot:
