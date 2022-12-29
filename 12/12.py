@@ -1,6 +1,6 @@
 import math
 
-INPUT_FILE = '12-input-test.txt'
+INPUT_FILE = '12-input.txt'
 STARTING_POINT = 'S'
 EXIT_POINT = 'E'
 HEIGHTS = 'abcdefghijklmnopqrstuvwxyz'
@@ -39,10 +39,13 @@ class Cell:
 
     def is_reachable_neighbor(self, cell):
         if abs(self.line - cell.line) not in [0, 1]:
+            print("line")
             return False
         if abs(self.column - cell.column) not in [0, 1]:
+            print("column")
             return False
-        if self.height - cell.height > -1:
+        if self.height - cell.height >= -1:
+            print("height")
             return True
 
     def get_unvisited_reachable_neighbors(self, grid):
@@ -88,8 +91,9 @@ class Grid:
         exit_point_cell = self.exit_point
 
         while current_cell != exit_point_cell and len(unvisited_cells) > 1 and current_cell.proximity != math.inf and not current_cell.visited:
+            print(f"Current cell: {current_cell.to_string()}")
             neighbors = current_cell.get_unvisited_reachable_neighbors(self)
-            print(f"Current cell proximity: {current_cell.proximity}")
+            print(f"Neighbors: {[neighbor.to_string() for neighbor in neighbors]}")
             for neighbor in neighbors:
                 neighbor.update_proximity(current_cell.proximity + 1)
             current_cell.visited = True
