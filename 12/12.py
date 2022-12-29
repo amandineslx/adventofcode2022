@@ -57,6 +57,15 @@ class Cell:
                 unvisited_neighbors.append(cell)
         return unvisited_neighbors
 
+    def get_unvisited_reachable_from_neighbors(self, grid):
+        coordinates = self.get_neighbor_coordinates(grid.height, grid.width)
+        unvisited_neighbors = []
+        for coordinate in coordinates:
+            cell = grid.get_cell(*coordinate)
+            if not cell.visited and cell.is_reachable_neighbor(self):
+                unvisited_neighbors.append(cell)
+        return unvisited_neighbors
+
 class Grid:
     def __init__(self, lines, columns):
         self.grid = [[Cell() for _ in range(columns)] for _ in range(lines)]
@@ -77,15 +86,43 @@ class Grid:
 
     def set_starting_point(self, line, column):
         self.starting_point = self.get_cell(line, column)
-        self.starting_point.proximity = 0
 
     def set_exit_point(self, line, column):
         self.exit_point = self.get_cell(line, column)
+
+    def shortest_path_length_with_dijkstra(self, starting_point, exit_point, stopping_condition, get_neighbors_method):
+        unvisited_cells = self.get_cells()
+
+        starting_point_cell = starting_point
+        starting_point_cell.proximity = 0
+        current_cell = starting_point_cell
+
+        exit_point_cell = exit_point
+
+        if not exit_point_cell:
+            stopping_condition = 'current_cell.height != 0'
+        else:
+            stopping_condition = 'current_cell != exit_point_cell'
+
+        while eval(condition) and len(unvisited_cells) > 1 and current_cell.proximity != math.inf and not current_cell.visited:
+            print(f"Current cell: {current_cell.to_string()}")
+            neighbors = current_cell.get_neighbors_method(self)
+            print(f"Neighbors: {[neighbor.to_string() for neighbor in neighbors]}")
+            for neighbor in neighbors:
+                neighbor.update_proximity(current_cell.proximity + 1)
+            current_cell.visited = True
+            unvisited_cells.remove(current_cell)
+            unvisited_cells.sort(key=lambda o: o.proximity)
+            print([unvisited_cell.to_string() for unvisited_cell in unvisited_cells])
+            current_cell = unvisited_cells[0]
+
+        return self.exit_point.proximity
 
     def find_shortest_path_length(self):
         unvisited_cells = self.get_cells()
 
         starting_point_cell = self.starting_point
+        starting_point_cell.proximity = 0
         current_cell = starting_point_cell
 
         exit_point_cell = self.exit_point
@@ -103,6 +140,27 @@ class Grid:
             current_cell = unvisited_cells[0]
 
         return self.exit_point.proximity
+
+    def find_ideal_starting_point(self):
+        unvisited_cells = self.get_cells()
+
+        starting_point_cell = self.exit_point
+        starting_point_cell.proximity = 0
+        current_cell = starting_point_cell
+
+        while current_cell.height != 0 and len(unvisited_cells) > 1 and current_cell.proximity != math.inf and not current_cell.visited:
+            print(f"Current cell: {current_cell.to_string()}")
+            neighbors = current_cell.get_unvisited_reachable_from_neighbors(self)
+            print(f"Neighbors: {[neighbor.to_string() for neighbor in neighbors]}")
+            for neighbor in neighbors:
+                neighbor.update_proximity(current_cell.proximity + 1)
+            current_cell.visited = True
+            unvisited_cells.remove(current_cell)
+            unvisited_cells.sort(key=lambda o: o.proximity)
+            print([unvisited_cell.to_string() for unvisited_cell in unvisited_cells])
+            current_cell = unvisited_cells[0]
+
+        return current_cell.proximity
 
 def build_grid():
     with open(INPUT_FILE) as f:
@@ -131,4 +189,5 @@ def build_grid():
     return grid
 
 grid = build_grid()
-print(grid.find_shortest_path_length())
+#print(grid.find_shortest_path_length())
+print(grid.find_ideal_starting_point())
