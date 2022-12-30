@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from functools import cmp_to_key
 
-INPUT_FILE = '13-input-test.txt'
+INPUT_FILE = '13-input.txt'
 SEPARATOR1 = [[2]]
 SEPARATOR2 = [[6]]
 
