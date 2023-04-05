@@ -1,6 +1,7 @@
 from numpy import array
 
 INPUT_FILE = '14-input.txt'
+SECOND_PART=True
 
 class FallingIndefinitelyBlockError(Exception):
     pass
@@ -11,20 +12,23 @@ class Cave:
         self.sand_x = 500
         self.max_y = None
 
-    def get_width(self):
-        return len(self.occupied_spaces)
-
     def get_below_occupied_block_y(self, x, y):
         if x not in self.occupied_spaces:
-            if not self.max_y:
-                self.max_y = self.get_max_y()
-            return self.max_y + 2
+            if SECOND_PART:
+                if not self.max_y:
+                    self.max_y = self.get_max_y()
+                return self.max_y + 2
+            else:
+                raise FallingIndefinitelyBlockError()
         arr = array(list(self.occupied_spaces[x]))
         superior_values = arr[arr > y]
         if not superior_values.any():
-            if not self.max_y:
-                self.max_y = self.get_max_y()
-            return self.max_y + 2
+            if SECOND_PART:
+                if not self.max_y:
+                    self.max_y = self.get_max_y()
+                return self.max_y + 2
+            else:
+                raise FallingIndefinitelyBlockError()
         return superior_values.min()
 
     def add_block(self, sandblock=None, x=None, y=None):
@@ -36,9 +40,13 @@ class Cave:
         self.occupied_spaces[x] = self.occupied_spaces[x].union([y])
 
     def is_occupied(self, x, y):
-        if not self.max_y:
-            self.max_y = self.get_max_y()
-        return y == self.max_y + 2 or (x in self.occupied_spaces and y in self.occupied_spaces[x])
+        condition = x in self.occupied_spaces and y in self.occupied_spaces[x]
+        if SECOND_PART:
+            if not self.max_y:
+                self.max_y = self.get_max_y()
+            return y == self.max_y + 2 or condition
+        else:
+            return condition
 
     def get_min_x(self):
         return min(self.occupied_spaces.keys())
@@ -57,7 +65,7 @@ class Cave:
         min_x = self.get_min_x()
         max_x = self.get_max_x()
         max_y = self.get_max_y()
-        grid = ["" for i in range(max_y+2)]
+        grid = ["" for i in range(max_y+2 if SECOND_PART else max_y+1)]
         for y in range(max_y+1):
             for x in range(min_x, max_x+1):
                 if x in self.occupied_spaces and y in self.occupied_spaces[x]:
@@ -66,8 +74,9 @@ class Cave:
                     grid[y] += "."
         source_index = 500-min_x
         grid[0] = grid[0][:source_index] + "o" + grid[0][source_index + 1:]
-        for x in range(min_x, max_x+1):
-            grid[max_y+1] += "#"
+        if SECOND_PART:
+            for x in range(min_x, max_x+1):
+                grid[max_y+1] += "#"
         for line in grid:
             print(line)
 
@@ -78,8 +87,7 @@ class SandBlock:
         self.cave = cave
 
     def is_outside(self):
-        return False
-        #return self.x < min(self.cave.occupied_spaces.keys()) or self.x > max(self.cave.occupied_spaces.keys())
+        return False if SECOND_PART else (self.x < min(self.cave.occupied_spaces.keys()) or self.x > max(self.cave.occupied_spaces.keys()))
 
     def can_fall_in_straight_line(self):
         return not self.cave.is_occupied(self.x, self.y + 1)
@@ -109,13 +117,10 @@ class SandBlock:
         while not is_static:
             if not self.is_outside():
                 if self.can_fall_in_straight_line():
-                    print("Can fall in straight line")
                     self.fall_in_straight_line()
                 elif self.can_fall_diagonally_left():
-                    print("Can fall diagonally left")
                     self.fall_diagonally_left()
                 elif self.can_fall_diagonally_right():
-                    print("Can fall diagonally right")
                     self.fall_diagonally_right()
                 else:
                     is_static = True
@@ -145,9 +150,7 @@ def populate_cave():
                 elif ay == by:
                     column_indexes = [i for i in range(min(ax,bx),max(ax,bx)+1)]
                     for i in column_indexes:
-                        if i not in cave.occupied_spaces:
-                            cave.occupied_spaces[i] = set()
-                        cave.occupied_spaces[i] = cave.occupied_spaces[i].union([ay])
+                        cave.add_block(x=i, y=ay)
     return cave
 
 def count_sand_blocks():
