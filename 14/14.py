@@ -9,17 +9,22 @@ class Cave:
     def __init__(self):
         self.occupied_spaces = dict()
         self.sand_x = 500
+        self.max_y = None
 
     def get_width(self):
         return len(self.occupied_spaces)
 
     def get_below_occupied_block_y(self, x, y):
         if x not in self.occupied_spaces:
-            raise FallingIndefinitelyBlockError()
+            if not self.max_y:
+                self.max_y = self.get_max_y()
+            return self.max_y + 2
         arr = array(list(self.occupied_spaces[x]))
         superior_values = arr[arr > y]
         if not superior_values.any():
-            raise FallingIndefinitelyBlockError()
+            if not self.max_y:
+                self.max_y = self.get_max_y()
+            return self.max_y + 2
         return superior_values.min()
 
     def add_block(self, sandblock=None, x=None, y=None):
@@ -27,11 +32,13 @@ class Cave:
             x = sandblock.x
             y = sandblock.y
         if x not in self.occupied_spaces:
-            self.occupied_spaces[x] = dict()
+            self.occupied_spaces[x] = set()
         self.occupied_spaces[x] = self.occupied_spaces[x].union([y])
 
     def is_occupied(self, x, y):
-        return x in self.occupied_spaces and y in self.occupied_spaces[x]
+        if not self.max_y:
+            self.max_y = self.get_max_y()
+        return y == self.max_y + 2 or (x in self.occupied_spaces and y in self.occupied_spaces[x])
 
     def get_min_x(self):
         return min(self.occupied_spaces.keys())
@@ -50,7 +57,7 @@ class Cave:
         min_x = self.get_min_x()
         max_x = self.get_max_x()
         max_y = self.get_max_y()
-        grid = ["" for i in range(max_y+1)]
+        grid = ["" for i in range(max_y+2)]
         for y in range(max_y+1):
             for x in range(min_x, max_x+1):
                 if x in self.occupied_spaces and y in self.occupied_spaces[x]:
@@ -59,6 +66,8 @@ class Cave:
                     grid[y] += "."
         source_index = 500-min_x
         grid[0] = grid[0][:source_index] + "o" + grid[0][source_index + 1:]
+        for x in range(min_x, max_x+1):
+            grid[max_y+1] += "#"
         for line in grid:
             print(line)
 
@@ -69,7 +78,8 @@ class SandBlock:
         self.cave = cave
 
     def is_outside(self):
-        return self.x < min(self.cave.occupied_spaces.keys()) or self.x > max(self.cave.occupied_spaces.keys())
+        return False
+        #return self.x < min(self.cave.occupied_spaces.keys()) or self.x > max(self.cave.occupied_spaces.keys())
 
     def can_fall_in_straight_line(self):
         return not self.cave.is_occupied(self.x, self.y + 1)
@@ -99,10 +109,13 @@ class SandBlock:
         while not is_static:
             if not self.is_outside():
                 if self.can_fall_in_straight_line():
+                    print("Can fall in straight line")
                     self.fall_in_straight_line()
                 elif self.can_fall_diagonally_left():
+                    print("Can fall diagonally left")
                     self.fall_diagonally_left()
                 elif self.can_fall_diagonally_right():
+                    print("Can fall diagonally right")
                     self.fall_diagonally_right()
                 else:
                     is_static = True
@@ -153,7 +166,7 @@ def count_sand_blocks():
         counter += 1
         sandblock = SandBlock(cave)
 
-    return counter
+    return counter+1
 
 def print_cave_for_test():
     cave = populate_cave()
