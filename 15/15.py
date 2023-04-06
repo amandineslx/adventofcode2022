@@ -1,6 +1,6 @@
 import re
 
-INPUT_FILE = '15-input-test.txt'
+INPUT_FILE = '15-input.txt'
 
 #compute distance from sensor to beacon
 #find all xs from y where distance to beacon is inferior to this distance
@@ -56,4 +56,5 @@ def count_places_without_sensor_in_line(y):
 
 #print(find_values('Sensor at x=2, y=18: closest beacon is at x=-2, y=15'))
 #print(build_mesh())
-print(count_places_without_sensor_in_line(10))
+#print(count_places_without_sensor_in_line(10))
+print(count_places_without_sensor_in_line(2000000))
