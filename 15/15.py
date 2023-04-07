@@ -1,8 +1,8 @@
 import re
 
-INPUT_FILE = '15-input-test.txt'
+INPUT_FILE = '15-input.txt'
 MIN_COORDINATES = 0
-MAX_COORDINATES = 20
+MAX_COORDINATES = 4000000
 FREQUENCY_MULTIPLICATOR = 4000000
 MESH = []
 
@@ -73,9 +73,7 @@ def find_coordinates_across_manhattan_distance(sensor):
     y = sensor.y
     d = sensor.distance_to_beacon + 1
     for i in range(d+2):
-        print(i)
         coordinates.update([(x-d+i,y+i),(x+d-i,y+i),(x+d-i,y-i),(x-d+i,y-i)])
-    print(coordinates)
     return coordinates
 
 def is_within_sensor_manhattan_distance(x, y, sensor):
