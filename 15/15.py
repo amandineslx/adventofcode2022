@@ -1,14 +1,10 @@
 import re
 
-INPUT_FILE = '15-input.txt'
-SECOND_PART = True
+INPUT_FILE = '15-input-test.txt'
 MIN_COORDINATES = 0
-MAX_COORDINATES = 4000000
+MAX_COORDINATES = 20
 FREQUENCY_MULTIPLICATOR = 4000000
-
-#compute distance from sensor to beacon
-#find all xs from y where distance to beacon is inferior to this distance
-#set of xs
+MESH = []
 
 class Sensor:
     def __init__(self, x, y, beacon):
@@ -18,42 +14,40 @@ class Sensor:
         self.compute_manhattan_distance()
 
     def compute_manhattan_distance(self):
-        self.distance_to_beacon = abs(self.x - self.beacon[0]) + abs(self.y - self.beacon[1])
+        self.distance_to_beacon = compute_manhattan_distance(self.get_coordinates(), self.beacon)
 
-def find_coordinates(line):
+    def get_coordinates(self):
+        return (self.x, self.y)
+
+    def to_string(self):
+        return f"Sensor(x={self.x},y={self.y},distance={self.distance_to_beacon})"
+
+def read_coordinates(line):
     regex = r'^Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)'
     return re.search(regex, line).groups()
 
 def build_mesh():
-    sensors = []
     with open(INPUT_FILE) as f:
         for line in f.readlines():
-            coordinates = find_coordinates(line)
+            coordinates = read_coordinates(line)
             beacon_coordinates = (int(coordinates[2]),int(coordinates[3]))
-            sensors.append(Sensor(int(coordinates[0]), int(coordinates[1]), beacon_coordinates))
-    return sensors
+            MESH.append(Sensor(int(coordinates[0]), int(coordinates[1]), beacon_coordinates))
+
+def print_mesh():
+    print("-----MESH-----")
+    for sensor in MESH:
+        print(sensor.to_string())
+    print("--------------")
+
+# PART 1
+def compute_manhattan_distance(coordinates1, coordinates2):
+    return abs(coordinates1[0] - coordinates2[0]) + abs(coordinates1[1] - coordinates2[1])
 
 def get_xs_in_manhattan_distance(y, sensor):
     x_abs = sensor.distance_to_beacon - abs(y - sensor.y)
     l1 = -1 * x_abs + sensor.x
     l2 = x_abs + sensor.x
-    if SECOND_PART:
-        if l1 < MIN_COORDINATES and l2 < MIN_COORDINATES:
-            return []
-        elif l1 > MAX_COORDINATES and l2 > MAX_COORDINATES:
-            return []
-        elif l1 < l2:
-            l1 = MIN_COORDINATES if l1 < MIN_COORDINATES else l1
-            l2 = MAX_COORDINATES if l2 > MAX_COORDINATES else l2
-        else:
-            l1 = MAX_COORDINATES if l1 > MAX_COORDINATES else l1
-            l2 = MIN_COORDINATES if l2 < MIN_COORDINATES else l2
-    xs = []
-    if l1 < l2:
-        xs.extend(range(l1, l2+1))
-    else:
-        xs.extend(range(l1, l2+1))
-    return xs
+    return [*range(l1, l2+1)]
 
 def get_places_without_sensor_in_line(y, sensors):
     xs = set()
@@ -66,25 +60,55 @@ def get_places_without_sensor_in_line(y, sensors):
         if sensor.beacon[1] == y:
             if sensor.beacon[0] in xs:
                 xs.remove(sensor.beacon[0])
-    #print(f"xs={xs}")
     return xs
 
-def count_places_without_sensor_in_line(y, sensors):
-    xs = get_places_without_sensor_in_line(y, sensors)
+def count_places_without_sensor_in_line(y):
+    xs = get_places_without_sensor_in_line(y, MESH)
     return len(xs)
 
+# PART 2
+def find_coordinates_across_manhattan_distance(sensor):
+    coordinates = set()
+    x = sensor.x
+    y = sensor.y
+    d = sensor.distance_to_beacon + 1
+    for i in range(d+2):
+        print(i)
+        coordinates.update([(x-d+i,y+i),(x+d-i,y+i),(x+d-i,y-i),(x-d+i,y-i)])
+    print(coordinates)
+    return coordinates
+
+def is_within_sensor_manhattan_distance(x, y, sensor):
+    manhattan_distance_to_sensor = compute_manhattan_distance((x, y), sensor.get_coordinates())
+    return manhattan_distance_to_sensor <= sensor.distance_to_beacon
+
+def can_distress_beacon_be_here(coordinate):
+    x = coordinate[0]
+    y = coordinate[1]
+    if x > MAX_COORDINATES or y > MAX_COORDINATES or x < 0 or y < 0:
+        return False
+    for sensor in MESH:
+        if is_within_sensor_manhattan_distance(x, y, sensor):
+            return False
+    return True
+
 def find_distress_beacon():
-    sensors = build_mesh()
-    # TODO for each sensor, go one step further in terms of manhattan distance and check if the squares are in range of the other beacons
-    # yes -> continue
-    # no -> the beacon is there
+    for sensor in MESH:
+        print(sensor.to_string())
+        coordinates = find_coordinates_across_manhattan_distance(sensor)
+        for coordinate in coordinates:
+            if can_distress_beacon_be_here(coordinate):
+                print(coordinate)
+                return coordinate
 
 def compute_distress_beacon_tuning_frequency():
+    print_mesh()
     distress_beacon_position = find_distress_beacon()
     return distress_beacon_position[0] * FREQUENCY_MULTIPLICATOR + distress_beacon_position[1]
 
+build_mesh()
 #print(find_values('Sensor at x=2, y=18: closest beacon is at x=-2, y=15'))
 #print(build_mesh())
 #print(count_places_without_sensor_in_line(10))
-#print(count_places_without_sensor_in_line(2000000, build_mesh()))
+#print(count_places_without_sensor_in_line(2000000))
 print(compute_distress_beacon_tuning_frequency())
